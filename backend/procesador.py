@@ -19,7 +19,6 @@ base_datos = Chroma(
 
 print(f"4. Procesando y guardando {len(mis_noticias)} noticias (Modo secuencial para ahorrar VRAM)...")
 
-# Procesamos UNA A UNA
 for i, n in enumerate(mis_noticias):
     print(f"   Generando embedding {i+1}/30: {n['titulo'][:50]}...")
     
@@ -28,11 +27,9 @@ for i, n in enumerate(mis_noticias):
         metadata={"titulo": n['titulo'], "url": n['url'], "fecha": n['fecha']}
     )
     
-    # Añadimos solo ESTE documento a la base de datos
     base_datos.add_documents([doc])
     
-    # TRUCO PRO: Forzamos a la gráfica a vaciar la "basura" después de cada noticia
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-print("\n¡Éxito total! Datos guardados usando el poder de tu RTX 4060 de forma eficiente.")
+print("\n¡Éxito total! Datos guardados de forma eficiente.")

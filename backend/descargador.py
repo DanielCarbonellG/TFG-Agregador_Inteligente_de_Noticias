@@ -25,10 +25,10 @@ def ejecutar_cosecha_total():
         with open(ARCHIVO_CERROJO, "r") as f:
             ultima_fecha = f.read().strip()
             if ultima_fecha == fecha_hoy:
-                print(f"✅ ¡Ya hemos cosechado hoy ({fecha_hoy})! No hace falta trabajar más. Cerrando...")
+                print(f"¡Ya hemos cosechado hoy ({fecha_hoy})! No hace falta trabajar más. Cerrando...")
                 return
 
-    print(f"\n=== INICIANDO DESCARGA MASIVA: {datetime.datetime.now()} ===")
+    print(f"\n=== INICIANDO DESCARGA: {datetime.datetime.now()} ===")
     
     modelo_embeddings = HuggingFaceEmbeddings(model_name="Qwen/Qwen3-Embedding-0.6B")
     base_datos = Chroma(persist_directory="./base_vectorial", embedding_function=modelo_embeddings)
@@ -42,7 +42,7 @@ def ejecutar_cosecha_total():
         noticias_api = obtener_noticias(tematica=cat, cantidad=100)
         
         if not noticias_api:
-            print("⚠️ Sin puntos en la API o error. Abortamos para no gastar recursos.")
+            print("Sin puntos en la API o error.")
             break
 
         for n in noticias_api:
@@ -65,7 +65,8 @@ def ejecutar_cosecha_total():
                     "titulo": titulo_limpio, 
                     "url": url_limpia, 
                     "fecha": n['fecha'], 
-                    "categoria": cat
+                    "categoria": cat,
+                    "imagen": n.get('imagen', '')
                 }
             )
             base_datos.add_documents([doc])
@@ -81,9 +82,9 @@ def ejecutar_cosecha_total():
 
     print("\n" + "="*50)
     print(f"FIN DE LA OPERACIÓN")
-    print(f"✅ Noticias nuevas y únicas: {total_nuevas}")
-    print(f"⏩ Repetidas (misma URL): {total_repetidas}")
-    print(f"🛡️ Sindicadas bloqueadas (mismo título): {total_sindicadas}")
+    print(f"Noticias nuevas: {total_nuevas}")
+    print(f"Repetidas (misma URL): {total_repetidas}")
+    print(f"Bloqueadas (mismo título): {total_sindicadas}")
     print("="*50)
 
 if __name__ == "__main__":

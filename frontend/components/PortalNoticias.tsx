@@ -97,9 +97,17 @@ export default function PortalNoticias({
 
         </div>
       </nav>
-      <main className="w-full max-w-7xl mx-auto px-4 py-12 flex-grow">
-        {vista === "feed" && !esInvitado && <FeedNoticias email={email} modo="feed" mostrarToast={mostrarToast} />}
-        {vista === "ultimahora" && <FeedNoticias email={email} modo="ultimahora" mostrarToast={mostrarToast} />}
+      <main className="max-w-7xl mx-auto px-4 py-12 flex-grow">
+        {!esInvitado && (
+          <div className={vista === "feed" ? "block" : "hidden"}>
+            <FeedNoticias email={email} modo="feed" mostrarToast={mostrarToast} />
+          </div>
+        )}
+
+        <div className={vista === "ultimahora" ? "block" : "hidden"}>
+          <FeedNoticias email={email} modo="ultimahora" mostrarToast={mostrarToast} />
+        </div>
+
         {vista === "perfil" && !esInvitado && (
           <VistaPerfil 
             email={email} 

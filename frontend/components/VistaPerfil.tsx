@@ -55,7 +55,7 @@ export default function VistaPerfil({
     }
   };
 
-const guardarEdicion = async () => {
+  const guardarEdicion = async () => {
     try {
       await api.put("/usuarios/actualizar_perfil", { 
         email, 
@@ -79,7 +79,8 @@ const guardarEdicion = async () => {
     const interesFormateado = nuevoInteres.trim().charAt(0).toUpperCase() + nuevoInteres.trim().slice(1).toLowerCase();
     try {
       await api.post("/usuarios/feedback", { email, categoria: interesFormateado, tipo: "like" });
-      setNuevoInteres(""); cargarPerfil(); 
+      setNuevoInteres(""); 
+      cargarPerfil(); 
     } catch (err) {}
   };
 
@@ -89,20 +90,40 @@ const guardarEdicion = async () => {
     const penalizacionFormateada = nuevaPenalizacion.trim().charAt(0).toUpperCase() + nuevaPenalizacion.trim().slice(1).toLowerCase();
     try {
       await api.post("/usuarios/feedback", { email, categoria: penalizacionFormateada, tipo: "dislike" });
-      setNuevaPenalizacion(""); cargarPerfil(); 
+      setNuevaPenalizacion(""); 
+      cargarPerfil(); 
     } catch (err) {}
   };
 
   const eliminarInteres = async (interes: string) => {
     if (!perfil) return;
     const nuevaLista = perfil.intereses_explicitos.filter(i => i !== interes);
-    try { await api.put("/usuarios/intereses", { email, intereses: nuevaLista }); cargarPerfil(); } catch (err) {}
+    try { 
+      await api.put("/usuarios/intereses", { email, intereses: nuevaLista }); 
+      cargarPerfil(); 
+    } catch (err) {}
   };
 
   const eliminarPenalizacion = async (categoria: string) => {
     if (!perfil) return;
     const nuevaLista = perfil.categorias_penalizadas.filter(c => c !== categoria);
-    try { await api.put("/usuarios/penalizaciones", { email, categorias: nuevaLista }); cargarPerfil(); } catch (err) {}
+    try { 
+      await api.put("/usuarios/penalizaciones", { email, categorias: nuevaLista }); 
+      cargarPerfil(); 
+    } catch (err) {}
+  };
+
+  const quitarNoticiaGuardada = async (titulo: string) => {
+    if (!perfil) return;
+    try {
+      await api.post("/usuarios/quitar_noticia", { email, titulo });
+      setPerfil(prev => prev ? {
+        ...prev,
+        noticias_guardadas: prev.noticias_guardadas.filter(n => n.titulo !== titulo)
+      } : null);
+    } catch (err) {
+      console.error("Error al quitar la noticia", err);
+    }
   };
 
   if (!perfil) return <SkeletonNoticia />;
@@ -164,6 +185,7 @@ const guardarEdicion = async () => {
           </div>
         </div>
       </header>
+
       <section className="bg-slate-900 border border-slate-800 p-6 md:p-8 rounded-3xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h3 className="text-xl font-bold text-white">Lo que te gusta</h3>
@@ -185,6 +207,7 @@ const guardarEdicion = async () => {
           )}
         </div>
       </section>
+
       <section className="bg-slate-900/30 border border-red-900/30 p-6 md:p-8 rounded-3xl relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-red-500/50"></div>
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
@@ -210,6 +233,7 @@ const guardarEdicion = async () => {
           )}
         </div>
       </section>
+
       <section>
         <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">Guardadas para luego</h3>
         {perfil.noticias_guardadas?.length === 0 ? (
@@ -219,13 +243,23 @@ const guardarEdicion = async () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {perfil.noticias_guardadas?.map((noticia, idx) => (
-              <a key={idx} href={noticia.url} target="_blank" rel="noopener noreferrer" className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl hover:border-blue-500/50 transition-all group block relative overflow-hidden hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-500/10">
-                <span className="text-blue-500 bg-blue-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">{noticia.categoria}</span>
-                <h4 className="text-xl font-serif font-bold text-slate-200 mt-3 mb-2 group-hover:text-blue-400 line-clamp-2">{noticia.titulo}</h4>
-                <p className="text-slate-500 text-sm flex items-center gap-1">
-                   <Icono name="time" className="w-3.5 h-3.5" /> {Math.ceil(noticia.texto_completo.split(/\s+/).length / 200)} min lectura
-                </p>
-              </a>
+              <div key={idx} className="bg-slate-900/50 border border-slate-800 p-6 rounded-3xl hover:border-blue-500/50 transition-all group flex flex-col justify-between">
+                <a href={noticia.url} target="_blank" rel="noopener noreferrer" className="block flex-grow mb-4">
+                  <span className="text-blue-500 bg-blue-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">{noticia.categoria}</span>
+                  <h4 className="text-xl font-serif font-bold text-slate-200 mt-3 mb-2 group-hover:text-blue-400 line-clamp-2">{noticia.titulo}</h4>
+                  <p className="text-slate-500 text-sm flex items-center gap-1">
+                     <Icono name="time" className="w-3.5 h-3.5" /> {Math.ceil(noticia.texto_completo.split(/\s+/).length / 200)} min lectura
+                  </p>
+                </a>
+                <div className="border-t border-slate-800/50 pt-4 flex justify-end">
+                  <button 
+                    onClick={() => quitarNoticiaGuardada(noticia.titulo)}
+                    className="text-xs font-bold bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-lg border border-red-500/20 transition-colors whitespace-nowrap"
+                  >
+                    <Icono name="cross" className="w-4 h-4 text-red" />
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         )}

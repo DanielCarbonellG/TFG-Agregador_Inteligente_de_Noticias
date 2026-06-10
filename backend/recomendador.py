@@ -18,28 +18,42 @@ def construir_perfil_textual(usuario):
         texto_perfil += ", ".join(usuario["categorias_penalizadas"]) + ". "
     return texto_perfil
 
-def recomendar_noticias(usuario, cantidad=10, saltar=0):
+def recomendar_noticias(usuario, cantidad=10, saltar=0, categoria_filtro=None):
     perfil_texto = construir_perfil_textual(usuario)
     penalizadas_lower = [p.lower().strip() for p in usuario.get("categorias_penalizadas", []) if p.strip()]
-    resultados = base_datos.similarity_search_with_score(perfil_texto, k=cantidad + saltar + 20)
+    
+    if categoria_filtro:
+        texto_busqueda = f"Noticias, información y artículos centrados en: {categoria_filtro}"
+    else:
+        texto_busqueda = perfil_texto
+
+    resultados = base_datos.similarity_search_with_score(texto_busqueda, k=cantidad + saltar + 50)
+    
     if not resultados:
         return []
+        
     lista_para_web = []
     noticias_validas_encontradas = 0
+    
     for doc, score in resultados: 
         categoria_original = doc.metadata.get('categoria', 'General').lower()
         if any(penalizada in categoria_original for penalizada in penalizadas_lower):
             continue
+            
         noticias_validas_encontradas += 1
         if noticias_validas_encontradas <= saltar:
             continue
+            
         titulo_doc = doc.metadata.get('titulo', 'Sin título')
         texto_doc = doc.page_content
         print(f"Bautizando noticia (Paginada): {titulo_doc[:30]}...")
+        
         categoria_dinamica_raw = resumidor.categorizar_noticia_ia(titulo_doc, texto_doc)
         categoria_dinamica_lower = categoria_dinamica_raw.lower()
+        
         if any(penalizada in categoria_dinamica_lower for penalizada in penalizadas_lower):
             continue
+            
         lista_para_web.append({
             "titulo": titulo_doc,
             "categoria": categoria_dinamica_raw,
@@ -49,8 +63,10 @@ def recomendar_noticias(usuario, cantidad=10, saltar=0):
             "texto_completo": texto_doc, 
             "distancia_matematica": round(float(score), 4) 
         })
+        
         if len(lista_para_web) == cantidad:
             break
+            
     return lista_para_web
 
 def obtener_ultima_hora_diversificada(cantidad=10, rapida=False, saltar=0):

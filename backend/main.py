@@ -112,12 +112,12 @@ def registrar_clic_noticia(lectura: LecturaNoticia):
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/api/noticias/feed/{email}")
-def obtener_feed_personalizado(email: str, skip: int = 0): # <-- NUEVO: skip
+def obtener_feed_personalizado(email: str, skip: int = 0, categoria: str = None): 
     usuario = gestor_usuarios.obtener_perfil_usuario(email)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     try:
-        noticias = recomendador.recomendar_noticias(usuario, cantidad=10, saltar=skip)
+        noticias = recomendador.recomendar_noticias(usuario, cantidad=10, saltar=skip, categoria_filtro=categoria)
         return {"noticias": noticias}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en recomendador: {str(e)}")

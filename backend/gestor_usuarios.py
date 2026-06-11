@@ -3,10 +3,14 @@ from pymongo.server_api import ServerApi
 import datetime
 import certifi
 from passlib.context import CryptContext
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-URI_MONGODB = "mongodb+srv://daniel_tfg:BasemilitarDB00@agregadornoticias.hasqxog.mongodb.net/?appName=AgregadorNoticias"
+URI_MONGODB = os.getenv("URI_MONGODB")
 
 print("Conectando a MongoDB Atlas en la nube...")
 
